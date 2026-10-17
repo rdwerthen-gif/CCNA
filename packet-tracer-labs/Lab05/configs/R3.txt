@@ -1,0 +1,13 @@
+hostname R3
+interface gi0/0
+ ip address 10.1.1.3 255.255.255.0
+ ip ospf priority 0
+ no shutdown
+interface gi0/1
+ ip address 10.2.2.1 255.255.255.252
+ ip ospf network point-to-point
+ no shutdown
+router ospf 1
+ router-id 3.3.3.3
+ network 10.1.1.0 0.0.0.255 area 0
+ network 10.2.2.0 0.0.0.3 area 0

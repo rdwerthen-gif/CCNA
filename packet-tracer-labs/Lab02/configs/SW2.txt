@@ -1,0 +1,15 @@
+hostname SW2
+spanning-tree mode rapid-pvst
+vlan 10
+spanning-tree vlan 10 root secondary
+interface range fa0/1 - 2
+ channel-group 1 mode passive
+interface port-channel 1
+ switchport mode trunk
+interface gi0/1
+ switchport mode trunk
+interface fa0/3
+ switchport mode access
+ switchport access vlan 10
+ spanning-tree portfast
+ spanning-tree bpduguard enable

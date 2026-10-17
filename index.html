@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CCNA 200-301 Study Desk</title>
+<link rel="stylesheet" href="css/styles.css">
+</style>
+</head>
+<body>
+<button class="menu-toggle" id="menuToggle" aria-label="Menu">☰</button>
+<div id="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">CC</div>
+      <div>
+        <div class="brand-title">CCNA Study Desk</div>
+        <div class="brand-sub">200-301 · v2.0 objectives</div>
+      </div>
+    </div>
+    <ul class="nav-top">
+      <li><a href="#/dashboard" data-route="dashboard" class="nav-link"></a></li>
+      <li><a href="#/quiz" data-route="quiz" class="nav-link"></a></li>
+      <li><a href="#/flashcards" data-route="flashcards" class="nav-link"></a></li>
+      <li><a href="#/labs" data-route="labs" class="nav-link"></a></li>
+      <li><a href="#/ptlabs" data-route="ptlabs" class="nav-link"></a></li>
+      <li><a href="#/pbq" data-route="pbq" class="nav-link"></a></li>
+      <li><a href="#/acronyms" data-route="acronyms" class="nav-link"></a></li>
+      <li><a href="#/studytips" data-route="studytips" class="nav-link"></a></li>
+      <li><a href="#/settings" data-route="settings" class="nav-link"></a></li>
+    </ul>
+    <div class="nav-domains" id="navDomains"></div>
+    <button class="download-btn" id="downloadObjectivesBtn" type="button">
+      <span class="download-icon">⬇</span>
+      <span>
+        <span class="download-title">Exam Objectives</span>
+        <span class="download-sub">Full 200-301 v2.0 objectives, as text</span>
+      </span>
+    </button>
+    <button class="download-btn" id="downloadManualBtn" type="button">
+      <span class="download-icon">⬇</span>
+      <span>
+        <span class="download-title">Study Desk Manual</span>
+        <span class="download-sub">How to use every feature</span>
+      </span>
+    </button>
+    <a class="download-btn" href="https://www.cisco.com/site/us/en/learn/training-certifications/exams/ccna.html" target="_blank" rel="noopener">
+      <span class="download-icon">↗</span>
+      <span>
+        <span class="download-title">Cisco CCNA</span>
+        <span class="download-sub">Official exam page ↗</span>
+      </span>
+    </a>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

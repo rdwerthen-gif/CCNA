@@ -1,0 +1,84 @@
+CCNA LAB 08: Standard, Extended and Named ACLs with Secured VTY
+Exam objectives: 4.6 · 4.1 · 4.2 · 2.4
+Goal: Restrict guest access with a named extended ACL and limit management to one host over SSH.
+
+HOW TO USE IN PACKET TRACER
+===========================
+1. Place the devices below and cable them as listed (Automatic cable type is fine).
+2. Configure the PC and server IP settings from the addressing table.
+3. Open each device CLI tab and try the tasks yourself first.
+4. Compare with the SOLUTION CONFIGS or paste them (enable, then configure terminal, then paste).
+5. Save your own .pkt file from Packet Tracer (File > Save).
+
+DEVICES
+=======
+- R1: Cisco 2911
+- PC1 (admin), PC2 (guest): PC-PT
+- Server: Server-PT (HTTP on)
+
+CABLING
+=======
+- PC1 to R1 Gi0/0
+- Server to R1 Gi0/1
+- PC2 to R1 Gi0/2
+
+TOPOLOGY
+========
+PC1(admin)--Gi0/0
+Server----Gi0/1--R1
+PC2(guest)-Gi0/2
+
+ADDRESSING
+==========
+- PC1 | 192.168.10.10/24 | GW 192.168.10.1
+- Server | 192.168.20.10/24 | GW 192.168.20.1
+- PC2 | 192.168.30.10/24 | GW 192.168.30.1
+- R1 | Gi0/0 .10.1  Gi0/1 .20.1  Gi0/2 .30.1
+
+TASKS
+=====
+1. Address the router and the hosts.
+2. Create named extended ACL GUEST-IN: permit TCP 80 to the server and UDP 53, deny all other guest traffic.
+3. Apply GUEST-IN inbound on Gi0/2.
+4. Enable SSH and permit only PC1 (standard ACL 10) with access-class on the VTY lines.
+5. Test: guest browses the server but cannot ping it; only PC1 can SSH.
+
+VERIFICATION
+============
+- R1: show access-lists (watch the hit counters)
+- PC2: browse to http://192.168.20.10 (works), ping 192.168.20.10 (fails)
+- PC1: ssh -l admin 192.168.10.1 (works)
+- PC2: ssh -l admin 192.168.30.1 (fails)
+
+CHALLENGE
+=========
+Move the deny entry above the permit and predict, then confirm, what happens to web access.
+
+SOLUTION CONFIGS
+================
+
+--- R1 ---
+hostname R1
+ip domain-name lab.local
+username admin privilege 15 secret C1sco#123
+crypto key generate rsa modulus 1024
+ip ssh version 2
+interface gi0/0
+ ip address 192.168.10.1 255.255.255.0
+ no shutdown
+interface gi0/1
+ ip address 192.168.20.1 255.255.255.0
+ no shutdown
+interface gi0/2
+ ip address 192.168.30.1 255.255.255.0
+ ip access-group GUEST-IN in
+ no shutdown
+ip access-list extended GUEST-IN
+ permit tcp 192.168.30.0 0.0.0.255 host 192.168.20.10 eq 80
+ permit udp 192.168.30.0 0.0.0.255 any eq 53
+ deny ip 192.168.30.0 0.0.0.255 any
+access-list 10 permit host 192.168.10.10
+line vty 0 4
+ access-class 10 in
+ transport input ssh
+ login local

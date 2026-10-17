@@ -1,0 +1,92 @@
+CCNA LAB 09: Layer 2 Security: Port Security, DHCP Snooping, DAI and Storm Control
+Exam objectives: 4.7.a · 4.7.b · 4.7.c · 4.7.e · 1.7
+Goal: Block a rogue DHCP server, validate ARP, limit MACs and storms on an access switch.
+
+HOW TO USE IN PACKET TRACER
+===========================
+1. Place the devices below and cable them as listed (Automatic cable type is fine).
+2. Configure the PC and server IP settings from the addressing table.
+3. Open each device CLI tab and try the tasks yourself first.
+4. Compare with the SOLUTION CONFIGS or paste them (enable, then configure terminal, then paste).
+5. Save your own .pkt file from Packet Tracer (File > Save).
+
+DEVICES
+=======
+- R1: Cisco 2911 (DHCP server)
+- SW1: Cisco 2960-24TT
+- PC1, PC2: PC-PT (DHCP)
+- Rogue: Server-PT with its own DHCP pool
+
+CABLING
+=======
+- R1 Gi0/0 to SW1 Gi0/1
+- PC1 to SW1 Fa0/1
+- PC2 to SW1 Fa0/2
+- Rogue server to SW1 Fa0/3
+
+TOPOLOGY
+========
+R1--Gi0/1 SW1 --Fa0/1-- PC1
+(trusted)    |--Fa0/2-- PC2
+             |--Fa0/3-- Rogue DHCP server
+
+ADDRESSING
+==========
+- R1 | Gi0/0 | 192.168.10.1/24 | DHCP pool 192.168.10.0/24
+- Rogue | Fa0 | 10.9.9.1/24 | DHCP pool 10.9.9.100+
+
+TASKS
+=====
+1. Build the legitimate DHCP server on R1 and confirm both PCs get 192.168.10.x.
+2. Enable the rogue DHCP service and watch a PC take a 10.9.9.x lease (the attack).
+3. Enable DHCP snooping on VLAN 10 and trust only Gi0/1. Renew the PCs.
+4. Enable DAI on VLAN 10 and trust Gi0/1.
+5. Apply sticky port security (max 2, restrict) and storm control to the host ports.
+
+VERIFICATION
+============
+- SW1: show ip dhcp snooping binding
+- SW1: show port-security interface fa0/1
+- SW1: show ip arp inspection
+- PC1: ipconfig /renew then ipconfig
+- SW1: show interfaces status err-disabled
+
+CHALLENGE
+=========
+Change the violation mode to shutdown, connect a third device through a hub, and recover the port after it goes err-disabled.
+
+SOLUTION CONFIGS
+================
+
+--- R1 ---
+hostname R1
+ip dhcp excluded-address 192.168.10.1 192.168.10.10
+ip dhcp pool LAN
+ network 192.168.10.0 255.255.255.0
+ default-router 192.168.10.1
+interface gi0/0
+ ip address 192.168.10.1 255.255.255.0
+ no shutdown
+
+--- SW1 ---
+hostname SW1
+vlan 10
+ip dhcp snooping
+ip dhcp snooping vlan 10
+ip arp inspection vlan 10
+interface gi0/1
+ switchport mode access
+ switchport access vlan 10
+ ip dhcp snooping trust
+ ip arp inspection trust
+interface range fa0/1 - 3
+ switchport mode access
+ switchport access vlan 10
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+ switchport port-security
+ switchport port-security maximum 2
+ switchport port-security mac-address sticky
+ switchport port-security violation restrict
+ storm-control broadcast level 20
+ ip dhcp snooping limit rate 15

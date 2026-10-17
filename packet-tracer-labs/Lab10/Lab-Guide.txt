@@ -1,0 +1,101 @@
+CCNA LAB 10: Device Management: SSH, AAA, SNMP, Syslog, CDP/LLDP and Config Backup
+Exam objectives: 4.1 · 4.2 · 5.4 · 5.6 · 2.3 · 5.3
+Goal: Secure and monitor a router and switch, validate documentation and back up configuration.
+
+HOW TO USE IN PACKET TRACER
+===========================
+1. Place the devices below and cable them as listed (Automatic cable type is fine).
+2. Configure the PC and server IP settings from the addressing table.
+3. Open each device CLI tab and try the tasks yourself first.
+4. Compare with the SOLUTION CONFIGS or paste them (enable, then configure terminal, then paste).
+5. Save your own .pkt file from Packet Tracer (File > Save).
+
+DEVICES
+=======
+- R1: Cisco 2911
+- SW1: Cisco 2960-24TT
+- Admin PC: PC-PT
+- Server0: Server-PT (Syslog, AAA, TFTP on)
+
+CABLING
+=======
+- Admin PC to SW1 Fa0/1
+- SW1 Gi0/1 to R1 Gi0/0
+- R1 Gi0/1 to Server0
+
+TOPOLOGY
+========
+Admin PC--SW1--R1--Server0 (Syslog / RADIUS / TFTP)
+
+ADDRESSING
+==========
+- Admin PC | 192.168.10.10/24 | GW 192.168.10.1
+- SW1 | VLAN 1 | 192.168.10.2/24 | GW 192.168.10.1
+- R1 Gi0/0 | 192.168.10.1/24
+- R1 Gi0/1 | 192.168.50.1/24
+- Server0 | 192.168.50.10/24 | GW 192.168.50.1 | RADIUS client R1 192.168.50.1 key radiuskey; user radiususer / radpass
+
+TASKS
+=====
+1. Address everything and verify reachability.
+2. Create a local admin account, then enable AAA with RADIUS first and local as fallback.
+3. Enable SSH version 2 on R1 and SW1 and restrict the VTY lines to SSH.
+4. Send warnings to the syslog server with millisecond timestamps.
+5. Configure an SNMP read-only community and query it from the Admin PC MIB Browser.
+6. Use CDP (and LLDP if your version supports it) to confirm the topology matches your diagram.
+7. Back up the running-config to the TFTP server. Real hardware would use SCP or SFTP; Packet Tracer only supports TFTP.
+
+VERIFICATION
+============
+- Admin PC: ssh -l admin 192.168.10.1
+- R1: show cdp neighbors detail
+- R1: show logging
+- Server0: Services > SYSLOG (confirm messages)
+- R1: copy running-config tftp: (host 192.168.50.10)
+- Admin PC: Desktop > MIB Browser, community CCNA-RO
+
+CHALLENGE
+=========
+Fail the RADIUS server (power it off) and log in over SSH to prove the local fallback works.
+
+SOLUTION CONFIGS
+================
+
+--- R1 ---
+hostname R1
+ip domain-name lab.local
+username admin privilege 15 secret C1sco#123
+radius-server host 192.168.50.10 key radiuskey
+aaa new-model
+aaa authentication login default group radius local
+crypto key generate rsa modulus 1024
+ip ssh version 2
+interface gi0/0
+ ip address 192.168.10.1 255.255.255.0
+ no shutdown
+interface gi0/1
+ ip address 192.168.50.1 255.255.255.0
+ no shutdown
+line vty 0 4
+ transport input ssh
+service timestamps log datetime msec
+logging host 192.168.50.10
+logging trap warnings
+snmp-server community CCNA-RO ro
+snmp-server location Lab-Rack1
+
+--- SW1 ---
+hostname SW1
+ip domain-name lab.local
+username admin privilege 15 secret C1sco#123
+crypto key generate rsa modulus 1024
+ip ssh version 2
+interface vlan 1
+ ip address 192.168.10.2 255.255.255.0
+ no shutdown
+ip default-gateway 192.168.10.1
+line vty 0 15
+ transport input ssh
+ login local
+service timestamps log datetime msec
+logging host 192.168.50.10

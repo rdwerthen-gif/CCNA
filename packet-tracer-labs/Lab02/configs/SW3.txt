@@ -1,0 +1,10 @@
+hostname SW3
+spanning-tree mode rapid-pvst
+vlan 10
+interface range gi0/1 - 2
+ switchport mode trunk
+interface fa0/3
+ switchport mode access
+ switchport access vlan 10
+ spanning-tree portfast
+ spanning-tree bpduguard enable

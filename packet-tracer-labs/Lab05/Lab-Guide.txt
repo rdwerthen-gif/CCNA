@@ -1,0 +1,124 @@
+CCNA LAB 05: Single-Area OSPFv2: DR/BDR, Point-to-Point and Passive Interfaces
+Exam objectives: 3.3.a · 3.3.b · 3.3.c · 3.3.d · 3.1
+Goal: Build a one-area OSPF network with a broadcast segment and a point-to-point link.
+
+HOW TO USE IN PACKET TRACER
+===========================
+1. Place the devices below and cable them as listed (Automatic cable type is fine).
+2. Configure the PC and server IP settings from the addressing table.
+3. Open each device CLI tab and try the tasks yourself first.
+4. Compare with the SOLUTION CONFIGS or paste them (enable, then configure terminal, then paste).
+5. Save your own .pkt file from Packet Tracer (File > Save).
+
+DEVICES
+=======
+- R1, R2, R3, R4: Cisco 2911
+- SW1: Cisco 2960-24TT (default)
+- PC1, PC2, PC4: PC-PT (optional)
+
+CABLING
+=======
+- R1, R2, R3 Gi0/0 to SW1 Fa0/1, Fa0/2, Fa0/3
+- R3 Gi0/1 to R4 Gi0/0
+- R1, R2, R4 LAN ports on Gi0/1 (to a PC)
+
+TOPOLOGY
+========
+R1--+
+R2--+--SW1 (10.1.1.0/24)
+R3--+
+ |
+R3==10.2.2.0/30==R4--LAN 192.168.4.0/24
+
+ADDRESSING
+==========
+- R1 Gi0/0 | 10.1.1.1/24 | priority 200 | RID 1.1.1.1
+- R2 Gi0/0 | 10.1.1.2/24 | priority 100 | RID 2.2.2.2
+- R3 Gi0/0 | 10.1.1.3/24 | priority 0 | RID 3.3.3.3
+- R3 Gi0/1 | 10.2.2.1/30 | point-to-point
+- R4 Gi0/0 | 10.2.2.2/30 | point-to-point | RID 4.4.4.4
+- LANs | 192.168.1.0/24, 192.168.2.0/24, 192.168.4.0/24 | passive
+
+TASKS
+=====
+1. Address all interfaces.
+2. Configure OSPF process 1 with explicit router IDs and network statements using wildcard masks.
+3. Make R1 the DR (priority 200), R2 the BDR, and R3 ineligible (priority 0).
+4. Set the R3-R4 link to point-to-point.
+5. Make LAN interfaces passive.
+6. Compare show ip ospf neighbor on each router and read the DR/BDR/DROTHER roles.
+
+VERIFICATION
+============
+- R1: show ip ospf neighbor
+- R3: show ip ospf neighbor
+- R1: show ip route ospf
+- R1: show ip ospf interface brief
+- R1: ping 192.168.4.1
+
+CHALLENGE
+=========
+If the DR is not R1, run clear ip ospf process on all routers (DR election is not preemptive). Then change R2 priority to 255 and explain why nothing changes until the process restarts.
+
+SOLUTION CONFIGS
+================
+
+--- R1 ---
+hostname R1
+interface gi0/0
+ ip address 10.1.1.1 255.255.255.0
+ ip ospf priority 200
+ no shutdown
+interface gi0/1
+ ip address 192.168.1.1 255.255.255.0
+ no shutdown
+router ospf 1
+ router-id 1.1.1.1
+ network 10.1.1.0 0.0.0.255 area 0
+ network 192.168.1.0 0.0.0.255 area 0
+ passive-interface gi0/1
+
+--- R2 ---
+hostname R2
+interface gi0/0
+ ip address 10.1.1.2 255.255.255.0
+ ip ospf priority 100
+ no shutdown
+interface gi0/1
+ ip address 192.168.2.1 255.255.255.0
+ no shutdown
+router ospf 1
+ router-id 2.2.2.2
+ network 10.1.1.0 0.0.0.255 area 0
+ network 192.168.2.0 0.0.0.255 area 0
+ passive-interface gi0/1
+
+--- R3 ---
+hostname R3
+interface gi0/0
+ ip address 10.1.1.3 255.255.255.0
+ ip ospf priority 0
+ no shutdown
+interface gi0/1
+ ip address 10.2.2.1 255.255.255.252
+ ip ospf network point-to-point
+ no shutdown
+router ospf 1
+ router-id 3.3.3.3
+ network 10.1.1.0 0.0.0.255 area 0
+ network 10.2.2.0 0.0.0.3 area 0
+
+--- R4 ---
+hostname R4
+interface gi0/0
+ ip address 10.2.2.2 255.255.255.252
+ ip ospf network point-to-point
+ no shutdown
+interface gi0/1
+ ip address 192.168.4.1 255.255.255.0
+ no shutdown
+router ospf 1
+ router-id 4.4.4.4
+ network 10.2.2.0 0.0.0.3 area 0
+ network 192.168.4.0 0.0.0.255 area 0
+ passive-interface gi0/1

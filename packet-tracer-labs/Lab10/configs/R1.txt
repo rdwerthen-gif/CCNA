@@ -1,0 +1,21 @@
+hostname R1
+ip domain-name lab.local
+username admin privilege 15 secret C1sco#123
+radius-server host 192.168.50.10 key radiuskey
+aaa new-model
+aaa authentication login default group radius local
+crypto key generate rsa modulus 1024
+ip ssh version 2
+interface gi0/0
+ ip address 192.168.10.1 255.255.255.0
+ no shutdown
+interface gi0/1
+ ip address 192.168.50.1 255.255.255.0
+ no shutdown
+line vty 0 4
+ transport input ssh
+service timestamps log datetime msec
+logging host 192.168.50.10
+logging trap warnings
+snmp-server community CCNA-RO ro
+snmp-server location Lab-Rack1

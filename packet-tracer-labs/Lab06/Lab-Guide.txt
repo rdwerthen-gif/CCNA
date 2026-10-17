@@ -1,0 +1,101 @@
+CCNA LAB 06: First Hop Redundancy with HSRP
+Exam objectives: 3.4 · 3.2.a · 2.4
+Goal: Give hosts a resilient default gateway and test failover.
+
+HOW TO USE IN PACKET TRACER
+===========================
+1. Place the devices below and cable them as listed (Automatic cable type is fine).
+2. Configure the PC and server IP settings from the addressing table.
+3. Open each device CLI tab and try the tasks yourself first.
+4. Compare with the SOLUTION CONFIGS or paste them (enable, then configure terminal, then paste).
+5. Save your own .pkt file from Packet Tracer (File > Save).
+
+DEVICES
+=======
+- R1, R2, ISP: Cisco 2911
+- SW1: Cisco 2960-24TT (default)
+- PC1: PC-PT
+
+CABLING
+=======
+- R1 Gi0/0 to SW1 Fa0/1
+- R2 Gi0/0 to SW1 Fa0/2
+- PC1 to SW1 Fa0/3
+- R1 Gi0/1 to ISP Gi0/0
+- R2 Gi0/1 to ISP Gi0/1
+
+TOPOLOGY
+========
+            +--R1--+
+PC1--SW1--+      +--ISP (8.8.8.8)
+            +--R2--+
+
+ADDRESSING
+==========
+- PC1 | Fa0 | 192.168.1.10/24 | GW 192.168.1.1 (virtual)
+- R1 | Gi0/0 | 192.168.1.2/24 | priority 110
+- R2 | Gi0/0 | 192.168.1.3/24 | priority 100
+- R1 / ISP | 10.0.1.0/30
+- R2 / ISP | 10.0.2.0/30
+- ISP | Loopback0 | 8.8.8.8/32
+
+TASKS
+=====
+1. Address the routers and add default routes toward ISP.
+2. Configure HSRP group 1 with virtual IP 192.168.1.1; R1 priority 110 with preempt.
+3. Point PC1 at the virtual IP.
+4. Run a continuous ping to 8.8.8.8, then shut R1 Gi0/0 and watch R2 become active.
+5. Restore R1 and confirm it preempts.
+
+VERIFICATION
+============
+- R1: show standby brief
+- R2: show standby brief
+- PC1: ping 8.8.8.8 -t
+- R2: show standby brief (after shutting R1 Gi0/0)
+
+CHALLENGE
+=========
+Remove preempt from R1, repeat the failover test, and explain why R1 does not take the active role back.
+
+SOLUTION CONFIGS
+================
+
+--- R1 ---
+hostname R1
+interface gi0/0
+ ip address 192.168.1.2 255.255.255.0
+ standby 1 ip 192.168.1.1
+ standby 1 priority 110
+ standby 1 preempt
+ no shutdown
+interface gi0/1
+ ip address 10.0.1.1 255.255.255.252
+ no shutdown
+ip route 0.0.0.0 0.0.0.0 10.0.1.2
+
+--- R2 ---
+hostname R2
+interface gi0/0
+ ip address 192.168.1.3 255.255.255.0
+ standby 1 ip 192.168.1.1
+ standby 1 priority 100
+ standby 1 preempt
+ no shutdown
+interface gi0/1
+ ip address 10.0.2.1 255.255.255.252
+ no shutdown
+ip route 0.0.0.0 0.0.0.0 10.0.2.2
+
+--- ISP ---
+hostname ISP
+interface gi0/0
+ ip address 10.0.1.2 255.255.255.252
+ no shutdown
+interface gi0/1
+ ip address 10.0.2.2 255.255.255.252
+ no shutdown
+interface loopback0
+ ip address 8.8.8.8 255.255.255.255
+ip route 192.168.1.0 255.255.255.0 10.0.1.1
+ip route 192.168.1.0 255.255.255.0 10.0.2.1 10

@@ -1,0 +1,84 @@
+CCNA LAB 07: NAT: PAT Overload and Static NAT
+Exam objectives: 4.3 · 3.2.a · 2.4
+Goal: Translate private hosts through one public address and publish an inside server with static NAT.
+
+HOW TO USE IN PACKET TRACER
+===========================
+1. Place the devices below and cable them as listed (Automatic cable type is fine).
+2. Configure the PC and server IP settings from the addressing table.
+3. Open each device CLI tab and try the tasks yourself first.
+4. Compare with the SOLUTION CONFIGS or paste them (enable, then configure terminal, then paste).
+5. Save your own .pkt file from Packet Tracer (File > Save).
+
+DEVICES
+=======
+- R1, ISP: Cisco 2911
+- SW1: Cisco 2960-24TT (default)
+- PC1, PC2: PC-PT
+- Inside Server, Web Server: Server-PT
+
+CABLING
+=======
+- PC1, PC2, Inside Server to SW1
+- SW1 to R1 Gi0/0
+- R1 Gi0/1 to ISP Gi0/0
+- ISP Gi0/1 to Web Server
+
+TOPOLOGY
+========
+PC1,PC2,InsideSrv--SW1--R1(Gi0/0 inside | Gi0/1 outside)--ISP--Web Server 198.51.100.10
+
+ADDRESSING
+==========
+- PC1 / PC2 | 192.168.1.10 / .11 | GW 192.168.1.1
+- Inside Server | 192.168.1.50/24 | GW 192.168.1.1 | static NAT to 203.0.113.3
+- R1 Gi0/0 | 192.168.1.1/24 | inside
+- R1 Gi0/1 | 203.0.113.2/29 | outside
+- ISP Gi0/0 | 203.0.113.1/29
+- ISP Gi0/1 | 198.51.100.1/24 | Web Server .10
+
+TASKS
+=====
+1. Address all devices and add R1 default route to the ISP.
+2. Mark R1 Gi0/0 as inside and Gi0/1 as outside.
+3. Configure ACL 1 and PAT with interface overload.
+4. Add static NAT for the inside server to 203.0.113.3.
+5. Browse to the web server from PC1 and confirm translations.
+
+VERIFICATION
+============
+- R1: show ip nat translations
+- R1: show ip nat statistics
+- PC1: ping 198.51.100.10 then open the web server in the browser
+- Web Server: observe that sources appear as 203.0.113.2
+
+CHALLENGE
+=========
+Remove the overload keyword and observe what happens when two PCs ping at once. Then explain the difference between inside local and inside global in the table.
+
+SOLUTION CONFIGS
+================
+
+--- R1 ---
+hostname R1
+interface gi0/0
+ ip address 192.168.1.1 255.255.255.0
+ ip nat inside
+ no shutdown
+interface gi0/1
+ ip address 203.0.113.2 255.255.255.248
+ ip nat outside
+ no shutdown
+ip route 0.0.0.0 0.0.0.0 203.0.113.1
+access-list 1 permit 192.168.1.0 0.0.0.255
+ip nat inside source list 1 interface gi0/1 overload
+ip nat inside source static 192.168.1.50 203.0.113.3
+
+--- ISP ---
+hostname ISP
+interface gi0/0
+ ip address 203.0.113.1 255.255.255.248
+ no shutdown
+interface gi0/1
+ ip address 198.51.100.1 255.255.255.0
+ no shutdown

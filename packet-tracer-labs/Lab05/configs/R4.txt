@@ -1,0 +1,13 @@
+hostname R4
+interface gi0/0
+ ip address 10.2.2.2 255.255.255.252
+ ip ospf network point-to-point
+ no shutdown
+interface gi0/1
+ ip address 192.168.4.1 255.255.255.0
+ no shutdown
+router ospf 1
+ router-id 4.4.4.4
+ network 10.2.2.0 0.0.0.3 area 0
+ network 192.168.4.0 0.0.0.255 area 0
+ passive-interface gi0/1

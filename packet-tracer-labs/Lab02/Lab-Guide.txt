@@ -1,0 +1,103 @@
+CCNA LAB 02: LACP EtherChannel and Rapid PVST+
+Exam objectives: 2.1.c · 2.5.a · 2.5.b · 2.5.c · 2.5.d
+Goal: Bundle two links with LACP, make SW1 the root bridge, and protect edge and root ports.
+
+HOW TO USE IN PACKET TRACER
+===========================
+1. Place the devices below and cable them as listed (Automatic cable type is fine).
+2. Configure the PC and server IP settings from the addressing table.
+3. Open each device CLI tab and try the tasks yourself first.
+4. Compare with the SOLUTION CONFIGS or paste them (enable, then configure terminal, then paste).
+5. Save your own .pkt file from Packet Tracer (File > Save).
+
+DEVICES
+=======
+- SW1, SW2, SW3: Cisco 2960-24TT
+- PC1, PC2: PC-PT
+
+CABLING
+=======
+- SW1 Fa0/1-2 to SW2 Fa0/1-2 (two links)
+- SW2 Gi0/1 to SW3 Gi0/1
+- SW1 Gi0/1 to SW3 Gi0/2
+- PC1 to SW2 Fa0/3
+- PC2 to SW3 Fa0/3
+
+TOPOLOGY
+========
+SW1 ==Fa0/1-2 (Po1, LACP)== SW2 --Fa0/3-- PC1
+ SW1 Gi0/1 -------- SW3 Gi0/2
+ SW2 Gi0/1 -------- SW3 Gi0/1
+ SW3 Fa0/3 -------- PC2
+
+ADDRESSING
+==========
+- PC1 | Fa0 | 192.168.10.11/24 | VLAN 10
+- PC2 | Fa0 | 192.168.10.12/24 | VLAN 10
+
+TASKS
+=====
+1. Enable Rapid PVST+ on all switches and create VLAN 10.
+2. Make SW1 root primary and SW2 root secondary for VLAN 10.
+3. Bundle SW1-SW2 with LACP: SW1 active, SW2 passive, as trunk Po1.
+4. Trunk the SW2-SW3 and SW1-SW3 links.
+5. Enable PortFast and BPDU Guard on host ports.
+6. Enable Root Guard on SW1 Gi0/1 toward SW3.
+7. Identify root, designated and alternate ports with show spanning-tree.
+
+VERIFICATION
+============
+- SW1: show etherchannel summary
+- SW1: show spanning-tree vlan 10
+- SW3: show spanning-tree vlan 10
+- SW2: show spanning-tree summary
+- PC1: ping 192.168.10.12
+
+CHALLENGE
+=========
+Set SW3 priority to 0 for VLAN 10 and observe Root Guard on SW1 Gi0/1 (root-inconsistent). Then remove it.
+
+SOLUTION CONFIGS
+================
+
+--- SW1 ---
+hostname SW1
+spanning-tree mode rapid-pvst
+vlan 10
+spanning-tree vlan 10 root primary
+interface range fa0/1 - 2
+ channel-group 1 mode active
+interface port-channel 1
+ switchport mode trunk
+interface gi0/1
+ switchport mode trunk
+ spanning-tree guard root
+
+--- SW2 ---
+hostname SW2
+spanning-tree mode rapid-pvst
+vlan 10
+spanning-tree vlan 10 root secondary
+interface range fa0/1 - 2
+ channel-group 1 mode passive
+interface port-channel 1
+ switchport mode trunk
+interface gi0/1
+ switchport mode trunk
+interface fa0/3
+ switchport mode access
+ switchport access vlan 10
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+
+--- SW3 ---
+hostname SW3
+spanning-tree mode rapid-pvst
+vlan 10
+interface range gi0/1 - 2
+ switchport mode trunk
+interface fa0/3
+ switchport mode access
+ switchport access vlan 10
+ spanning-tree portfast
+ spanning-tree bpduguard enable

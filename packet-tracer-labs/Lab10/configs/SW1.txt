@@ -1,0 +1,14 @@
+hostname SW1
+ip domain-name lab.local
+username admin privilege 15 secret C1sco#123
+crypto key generate rsa modulus 1024
+ip ssh version 2
+interface vlan 1
+ ip address 192.168.10.2 255.255.255.0
+ no shutdown
+ip default-gateway 192.168.10.1
+line vty 0 15
+ transport input ssh
+ login local
+service timestamps log datetime msec
+logging host 192.168.50.10

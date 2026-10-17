@@ -1,0 +1,88 @@
+CCNA LAB 03: DHCP Server, Relay and APIPA Troubleshooting
+Exam objectives: 1.7 · 1.3 · 2.4
+Goal: Serve two subnets from one router and relay requests across a routed link.
+
+HOW TO USE IN PACKET TRACER
+===========================
+1. Place the devices below and cable them as listed (Automatic cable type is fine).
+2. Configure the PC and server IP settings from the addressing table.
+3. Open each device CLI tab and try the tasks yourself first.
+4. Compare with the SOLUTION CONFIGS or paste them (enable, then configure terminal, then paste).
+5. Save your own .pkt file from Packet Tracer (File > Save).
+
+DEVICES
+=======
+- R1, R2: Cisco 2911
+- SW1, SW2: Cisco 2960-24TT (default config)
+- PC1, PC2: PC-PT (DHCP)
+
+CABLING
+=======
+- PC1 to SW1 Fa0/1, SW1 Fa0/2 to R1 Gi0/0
+- R1 Gi0/1 to R2 Gi0/0
+- R2 Gi0/1 to SW2 Fa0/2, SW2 Fa0/1 to PC2
+
+TOPOLOGY
+========
+PC1--SW1--Gi0/0 R1 Gi0/1====Gi0/0 R2 Gi0/1--SW2--PC2
+   192.168.10.0/24    10.0.0.0/30    192.168.20.0/24
+
+ADDRESSING
+==========
+- R1 | Gi0/0 | 192.168.10.1/24 | DHCP server LAN10
+- R1 | Gi0/1 | 10.0.0.1/30
+- R2 | Gi0/0 | 10.0.0.2/30
+- R2 | Gi0/1 | 192.168.20.1/24 | relay to 10.0.0.1
+
+TASKS
+=====
+1. Address the interfaces and add the static routes.
+2. On R1 exclude .1 to .10 in both subnets and build pools LAN10 and LAN20 with gateway and DNS 8.8.8.8.
+3. Configure ip helper-address on R2 Gi0/1.
+4. Set both PCs to DHCP and confirm leases.
+5. Remove the helper address and observe the 169.254 address, then restore it.
+
+VERIFICATION
+============
+- R1: show ip dhcp binding
+- R1: show ip dhcp pool
+- PC2: ipconfig /all
+- PC2: ping 192.168.10.1
+
+CHALLENGE
+=========
+Change the LAN20 pool network to 192.168.21.0 and use the lease and ipconfig output to find why PC2 gets the wrong gateway.
+
+SOLUTION CONFIGS
+================
+
+--- R1 ---
+hostname R1
+ip dhcp excluded-address 192.168.10.1 192.168.10.10
+ip dhcp excluded-address 192.168.20.1 192.168.20.10
+ip dhcp pool LAN10
+ network 192.168.10.0 255.255.255.0
+ default-router 192.168.10.1
+ dns-server 8.8.8.8
+ip dhcp pool LAN20
+ network 192.168.20.0 255.255.255.0
+ default-router 192.168.20.1
+ dns-server 8.8.8.8
+interface gi0/0
+ ip address 192.168.10.1 255.255.255.0
+ no shutdown
+interface gi0/1
+ ip address 10.0.0.1 255.255.255.252
+ no shutdown
+ip route 192.168.20.0 255.255.255.0 10.0.0.2
+
+--- R2 ---
+hostname R2
+interface gi0/0
+ ip address 10.0.0.2 255.255.255.252
+ no shutdown
+interface gi0/1
+ ip address 192.168.20.1 255.255.255.0
+ ip helper-address 10.0.0.1
+ no shutdown
+ip route 0.0.0.0 0.0.0.0 10.0.0.1

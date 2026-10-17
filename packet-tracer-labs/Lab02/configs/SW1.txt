@@ -1,0 +1,11 @@
+hostname SW1
+spanning-tree mode rapid-pvst
+vlan 10
+spanning-tree vlan 10 root primary
+interface range fa0/1 - 2
+ channel-group 1 mode active
+interface port-channel 1
+ switchport mode trunk
+interface gi0/1
+ switchport mode trunk
+ spanning-tree guard root
